@@ -31,7 +31,7 @@ client = speechd.SSIPClient('test')
 #     client.set_output_module('festival')
 client.set_language('en')
 client.set_punctuation(speechd.PunctuationMode.SOME)
-client.set_priority(speechd.Priority.NOTIFICATION)
+client.set_priority(speechd.Priority.MESSAGE)
 client.speak("Emacspeak Speech Dispatcher!")
 
 
@@ -59,13 +59,15 @@ while 1:
         client.speak(data)
     if cmd == "s":
         log( "stopping")
-        client.stop
+        client.stop()
     if cmd == "tts_set_speech_rate":
         set_rate(data)
     if cmd == "l":
         log( "letter " + data)
         data = re.sub("}", "", data) 
         client.char(data)
-
+    if cmd == "x":
+        client.close()
+        exit()
 
 client.close()

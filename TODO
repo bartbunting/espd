@@ -1,5 +1,3 @@
 * BUGS
-The script doesn't appear to exit correctly.  When run from an emacs
-   shell even if the 'x' command is given to exit the script just
-   hangs.
-
+Stopping speech may not be as snappy as it could be.
+There are no voice changes implimented yet.
