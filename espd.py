@@ -57,6 +57,10 @@ while 1:
     log( "rem dtk: '" + data + "'")
     if cmd == "q":
         client.speak(data)
+    if cmd == "tts_say":
+
+
+        client.speak(data)
     if cmd == "s":
         log( "stopping")
         client.stop()
@@ -66,6 +70,7 @@ while 1:
         log( "letter " + data)
         data = re.sub("}", "", data) 
         client.char(data)
+        # x is for exit.  Not used by emacspeak, helpful for testing.
     if cmd == "x":
         client.close()
         exit()
