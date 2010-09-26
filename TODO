@@ -1,3 +1,6 @@
-* BUGS
-Stopping speech may not be as snappy as it could be.
+* Issues
+Stopping speech may not be as snappy as it could be.  Probably need to
+   do the queueing ourselves and not send everything to SD.
 There are no voice changes implimented yet.
+Do something with capital letter recognition
+Get dtk-toggle-capitalization  working with SD beeps
