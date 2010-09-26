@@ -48,31 +48,48 @@ while 1:
         cmd = line
         data = ""
     log ("cmd " + cmd + " data " + data)
+
+    # hack needs fixing.  Skip commands which are just a right brace,
+    # This happens as braces are used as delimiters for data in some
+    # commands sent from emacs.  If the data contains a trailing
+    # newline we read it as a new line and hence the right brace
+    # becomes the cmd for the next line.
+    if cmd == '':
+        log("skipping empty cmd")
+        continue
+
     # remove leading left brace if it exists
     data = re.sub(r"^{", "", data)
     # remove trailing right brace if it exists
     data = re.sub(r"}$", "", data)
-    log( "data now '" + data + "'")
     data = re.sub(r"\[ ?:.*?\]", "", data)
-    log( "rem dtk: '" + data + "'")
+    log( "data now '" + data + "'")
+
+    # This long if elif else block should probably be replaced by
+    # something nicer.  Right now I'm not sure what that is.
     if cmd == "q":
         client.speak(data)
-    if cmd == "tts_say":
-
-
+    elif cmd == "tts_say":
         client.speak(data)
-    if cmd == "s":
+    elif cmd == "d":
+        # not implimented yet, in tcl this function speaks the
+        # currently queued text.  At the moment we are sending stuff
+        # directly to speech dispatcher.  This may change.
+        continue
+    elif cmd == "s":
         log( "stopping")
         client.stop()
-    if cmd == "tts_set_speech_rate":
+    elif cmd == "tts_set_speech_rate":
         set_rate(data)
-    if cmd == "l":
+    elif cmd == "l":
         log( "letter " + data)
-        data = re.sub("}", "", data) 
         client.char(data)
         # x is for exit.  Not used by emacspeak, helpful for testing.
-    if cmd == "x":
+    elif cmd == "x":
         client.close()
         exit()
-
+    # Log any unimplemented commands
+    else:
+        log("Unimplemented: " + line)
+# close our connection to speech dispatcher although theoretically
 client.close()
