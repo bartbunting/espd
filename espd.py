@@ -19,15 +19,24 @@ def set_rate(rate):
         r = 100
     if r < -100:
         r = -100
-
     client.set_rate(r)
+
+def set_punctuation(punctlevel):
+    if punctlevel == "all":
+        client.set_punctuation(speechd.PunctuationMode.ALL)
+    elif punctlevel == "some":
+        client.set_punctuation(speechd.PunctuationMode.SOME)
+    elif punctlevel == "none":
+        client.set_punctuation(speechd.PunctuationMode.NONE)
+    else:
+        log ("unimplemented punctuation level " + punctlevel)
 
 
 # Main
 
 
 
-client = speechd.SSIPClient('test')
+client = speechd.SSIPClient('espd')
 #     client.set_output_module('festival')
 client.set_language('en')
 client.set_punctuation(speechd.PunctuationMode.SOME)
@@ -81,6 +90,8 @@ while 1:
         client.stop()
     elif cmd == "tts_set_speech_rate":
         set_rate(data)
+    elif cmd == "tts_set_punctuations":
+        set_punctuation(data)
     elif cmd == "l":
         log( "letter " + data)
         client.char(data)
