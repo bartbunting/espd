@@ -1,0 +1,5 @@
+* BUGS
+The script doesn't appear to exit correctly.  When run from an emacs
+   shell even if the 'x' command is given to exit the script just
+   hangs.
+

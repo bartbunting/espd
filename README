@@ -1,4 +1,41 @@
+* Introduction
 This is an emacspeak speech server that works with speech dispatcher.
 
 It is very much in it's infancy and needs  more work.
+
+To use it you will need to have emacspeak and speech dispatcher already installed.
+
+* Installation
+
+Before beginning confirm that your speech dispatcher is working by running the following command:
+
+spd-say test
+
+You should hear the word "test" spoken.  
+If this doesn't work you will have to find out what is wrong with speech dispatcher before proceeding.
+
+Next test the espd.py script, from this directory run:
+
+./espd.py
+
+You should hear a startup message spoken "Emacspeak speech dispatcher!".
+
+If this works try typing:
+
+q this is a test
+d
+
+You should hear the text spoken.
+
+At this point you have confirmed that you have a working speech dispatcher and espd.
+
+Next you will need to copy the espd.py script into the servers subdirectory of your emacspeak installation.  You can also simlink it as well if you like.
+
+If you wish to be able to switch between multiple synthesizers within emacspeak add the line "espd.py" to the .servers file in the servers directory.  This will let emacspeak know that espd.py exists.
+
+One way to start emacspeak with espd is to export the DTK_PROGRAM environment variable.  For   example:
+
+export DTK_PROGRAM=espd.py
+
+Then run emacs.  This assumes that your .emacs file loads emacspeak.
 
