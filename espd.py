@@ -31,6 +31,23 @@ def set_punctuation(punctlevel):
     else:
         log ("unimplemented punctuation level " + punctlevel)
 
+def tts_capitalize(val):
+    log("Setting capitalization to " + val)
+    v = int(val)
+    if v == 0:
+        client.set_cap_let_recogn("none")
+    else:
+        client.set_cap_let_recogn("icon")
+    
+def         tts_sync_state(punct, capitalize, allcaps, splitcaps, rate):
+    log("punctuation: " + punct)
+    log("capitalize: " + capitalize)
+    log("allcaps: " + allcaps)
+    log("splitcaps: " + splitcaps)
+    log("rate: " + rate)
+    set_punctuation(punct)
+    tts_capitalize(capitalize)
+    set_rate(rate)
 
 # Main
 
@@ -40,7 +57,6 @@ client = speechd.SSIPClient('espd')
 #     client.set_output_module('festival')
 client.set_language('en')
 client.set_punctuation(speechd.PunctuationMode.SOME)
-client.set_cap_let_recogn("icon")
 client.set_priority(speechd.Priority.MESSAGE)
 client.speak("Emacspeak Speech Dispatcher!")
 
@@ -68,6 +84,7 @@ while 1:
             # read more lines as this command isn't finished yet
             while(1):
                 line = sys.stdin.readline().rstrip()
+                log("extra line: " + data)
                 data = data + " " + line
                 # Break out of this loop if the line ends in a right brace as this signals the end of this command
                 if re.match(r".*}$", line):
@@ -112,6 +129,9 @@ while 1:
     elif cmd == "l":
         log( "letter " + data)
         client.char(data)
+    elif cmd == "tts_sync_state":
+        punct, capitalize, allcaps, splitcaps, rate = re.split("\s+", data)
+        tts_sync_state(punct, capitalize, allcaps, splitcaps, rate)
         # x is for exit.  Not used by emacspeak, helpful for testing.
     elif cmd == "x":
         client.close()
