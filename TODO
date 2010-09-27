@@ -4,3 +4,4 @@ Stopping speech may not be as snappy as it could be.  Probably need to
 There are no voice changes implimented yet.
 Do something with capital letter recognition
 Get dtk-toggle-capitalization  working with SD beeps
+Implement tones
