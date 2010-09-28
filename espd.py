@@ -4,6 +4,8 @@ import sys
 import speechd
 from collections import deque
 import re
+import select 
+
 
 
 # functions
@@ -49,65 +51,8 @@ def         tts_sync_state(punct, capitalize, allcaps, splitcaps, rate):
     tts_capitalize(capitalize)
     set_rate(rate)
 
-# Main
 
-
-
-client = speechd.SSIPClient('espd')
-#     client.set_output_module('festival')
-client.set_language('en')
-client.set_punctuation(speechd.PunctuationMode.SOME)
-client.set_priority(speechd.Priority.MESSAGE)
-client.speak("Emacspeak Speech Dispatcher!")
-
-
-q = deque([])
-
-# Main loop
-while 1:
-    line = sys.stdin.readline().rstrip()
-    log("original: " + line)
-    # split out the command from the data 
-    if re.search("\s+", line):
-        cmd, data = re.split("\s+", line, 1)
-    else:
-        cmd = line
-        data = ""
-
-    # This tests if we have a q command if we received the entire
-    # data.  As the data to the q command is delimited with left and
-    # right braces if the line doesn't end in a brace we still have
-    # more to read.
-    if cmd == 'q':
-        if not re.match(r"^{.*}$", data):
-            log("Unfinished command detected")
-            # read more lines as this command isn't finished yet
-            while(1):
-                line = sys.stdin.readline().rstrip()
-                log("extra line: " + data)
-                data = data + " " + line
-                # Break out of this loop if the line ends in a right brace as this signals the end of this command
-                if re.match(r".*}$", line):
-                    break
-    log ("cmd " + cmd + " data " + data)
-
-    # hack needs fixing.  Skip commands which are just a right brace,
-    # This happens as braces are used as delimiters for data in some
-    # commands sent from emacs.  If the data contains a trailing
-    # newline we read it as a new line and hence the right brace
-    # becomes the cmd for the next line.
-    if cmd == '':
-        log("skipping empty cmd")
-        continue
-
-    # remove leading left brace if it exists
-    data = re.sub(r"^{", "", data)
-    # remove trailing right brace if it exists
-    data = re.sub(r"}$", "", data)
-    # remove dectalk control codes 
-    data = re.sub(r"\[ ?:.*?\]", "", data)
-    log( "data now '" + data + "'")
-
+def process_cmd(cmd, data):
     # This long if elif else block should probably be replaced by
     # something nicer.  Right now I'm not sure what that is.
     if cmd == "q":
@@ -118,7 +63,7 @@ while 1:
         # not implimented yet, in tcl this function speaks the
         # currently queued text.  At the moment we are sending stuff
         # directly to speech dispatcher.  This may change.
-        continue
+        print "d unimplimented"
     elif cmd == "s":
         log( "stopping")
         client.stop()
@@ -139,5 +84,66 @@ while 1:
     # Log any unimplemented commands
     else:
         log("Unimplemented: " + line)
+
+# Main
+
+
+
+client = speechd.SSIPClient('espd')
+#     client.set_output_module('festival')
+client.set_language('en')
+client.set_punctuation(speechd.PunctuationMode.SOME)
+client.set_priority(speechd.Priority.MESSAGE)
+client.speak("Emacspeak Speech Dispatcher!")
+
+
+q = deque([])
+
+# Main loop
+input = [sys.stdin] 
+while 1:
+    inputready,outputready,exceptready = select.select(input,[],[]) 
+    print "inputready: ", inputready
+    if sys.stdin in inputready:
+        line = sys.stdin.readline().rstrip()
+        log("original: " + line)
+        # split out the command from the data 
+        if re.search("\s+", line):
+            cmd, data = re.split("\s+", line, 1)
+        else:
+            cmd = line
+            data = ""
+
+        # This tests if we have a q command if we received the entire
+        # data.  As the data to the q command is delimited with left
+        # and right braces if the line doesn't end in a brace we still
+        # have more to read.
+        if cmd == 'q':
+            if not re.match(r"^{.*}$", data):
+                log("Unfinished command detected")
+            # read more lines as this command isn't finished yet
+                # this is wrong and nasty and should be banished 
+                while(1):
+                    line = sys.stdin.readline().rstrip()
+                    log("extra line: " + data)
+                    data = data + " " + line
+                    # Break out of this loop if the line ends in a right brace as this signals the end of this command
+                    if re.match(r".*}$", line):
+                        break
+
+
+    	# remove leading left brace if it exists
+        data = re.sub(r"^{", "", data)
+        # remove trailing right brace if it exists
+        data = re.sub(r"}$", "", data)
+        # remove dectalk control codes 
+        data = re.sub(r"\[ ?:.*?\]", "", data)
+        log( "data now '" + data + "'")
+        process_cmd(cmd, data)
+    # If we fell through because of a timeout
+    else:
+        print "timeout"
+
+
 # close our connection to speech dispatcher although theoretically
 client.close()
