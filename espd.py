@@ -105,46 +105,51 @@ client.speak("Emacspeak Speech Dispatcher!")
 queue = deque([])
 
 # Main loop
+read_partial_cmd = 0            # flag to indicate if we have only read a partial command so far
 input = [sys.stdin] 
 while 1:
+    log("select")
     inputready,outputready,exceptready = select.select(input,[],[]) 
     print "inputready: ", inputready
     if sys.stdin in inputready:
         line = sys.stdin.readline().rstrip()
         log("original: " + line)
-        # split out the command from the data 
-        if re.search("\s+", line):
-            cmd, data = re.split("\s+", line, 1)
+        log("partial " + str(read_partial_cmd))
+        # if we already have a partial command then append the data
+        if read_partial_cmd == 1:
+            log("appending '" + line + "' to data")
+            data = data + " " + line
+            if re.match(r".*}$", line):
+                # if the line ends in a right brace we have got the entire cmd
+                log("found end of cmd marker")
+                read_partial_cmd = 0
+                process_cmd(cmd, data)
         else:
-            cmd = line
-            data = ""
+            # split out the command from the data 
+            if re.search("\s+", line):
+                cmd, data = re.split("\s+", line, 1)
+            else:
+                cmd = line
+                data = ""
 
-        # This tests if we have a q command if we received the entire
-        # data.  As the data to the q command is delimited with left
-        # and right braces if the line doesn't end in a brace we still
-        # have more to read.
-        if cmd == 'q':
-            if not re.match(r"^{.*}$", data):
-                log("Unfinished command detected")
-            # read more lines as this command isn't finished yet
-                # this is wrong and nasty and should be banished 
-                while(1):
-                    line = sys.stdin.readline().rstrip()
-                    log("extra line: " + data)
-                    data = data + " " + line
-                    # Break out of this loop if the line ends in a right brace as this signals the end of this command
-                    if re.match(r".*}$", line):
-                        break
+            # This tests if we have a q command if we received the
+            # entire data.  As the data to the q command is delimited
+            # with left and right braces if the line doesn't end in a
+            # brace we still have more to read.
+            if cmd == 'q':
+                if not re.match(r"^{.*}$", data):
+                    log("Unfinished command detected")
+                    read_partial_cmd = 1
+                    continue
 
-
-    	# remove leading left brace if it exists
-        data = re.sub(r"^{", "", data)
-        # remove trailing right brace if it exists
-        data = re.sub(r"}$", "", data)
-        # remove dectalk control codes 
-        data = re.sub(r"\[ ?:.*?\]", "", data)
-        log( "cmd: " + cmd + " data now '" + data + "'")
-        process_cmd(cmd, data)
+            # remove leading left brace if it exists
+            data = re.sub(r"^{", "", data)
+            # remove trailing right brace if it exists
+            data = re.sub(r"}$", "", data)
+            # remove dectalk control codes 
+            data = re.sub(r"\[ ?:.*?\]", "", data)
+            log( "cmd: " + cmd + " data now '" + data + "'")
+            process_cmd(cmd, data)
     # If we fell through because of a timeout
     else:
         print "timeout"
