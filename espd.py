@@ -53,17 +53,22 @@ def         tts_sync_state(punct, capitalize, allcaps, splitcaps, rate):
 
 
 def process_cmd(cmd, data):
+    log("process_cmd")
     # This long if elif else block should probably be replaced by
     # something nicer.  Right now I'm not sure what that is.
     if cmd == "q":
-        client.speak(data)
+        log("queueing " +  data)
+        queue.appendleft(data)
     elif cmd == "tts_say":
         client.speak(data)
     elif cmd == "d":
-        # not implimented yet, in tcl this function speaks the
-        # currently queued text.  At the moment we are sending stuff
-        # directly to speech dispatcher.  This may change.
-        print "d unimplimented"
+        # this command speaks the currently queued text.
+        while(len(queue) > 0):
+            i = queue.pop()
+            log("q length: " + str(len(queue)))
+            log("i: " +  i)
+            client.set_priority(speechd.Priority.MESSAGE)
+            client.speak(i)
     elif cmd == "s":
         log( "stopping")
         client.stop()
@@ -97,7 +102,7 @@ client.set_priority(speechd.Priority.MESSAGE)
 client.speak("Emacspeak Speech Dispatcher!")
 
 
-q = deque([])
+queue = deque([])
 
 # Main loop
 input = [sys.stdin] 
@@ -138,7 +143,7 @@ while 1:
         data = re.sub(r"}$", "", data)
         # remove dectalk control codes 
         data = re.sub(r"\[ ?:.*?\]", "", data)
-        log( "data now '" + data + "'")
+        log( "cmd: " + cmd + " data now '" + data + "'")
         process_cmd(cmd, data)
     # If we fell through because of a timeout
     else:
