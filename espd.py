@@ -53,6 +53,16 @@ def         tts_sync_state(punct, capitalize, allcaps, splitcaps, rate):
     tts_capitalize(capitalize)
     set_rate(rate)
 
+
+def clean(data):
+    # remove leading left brace if it exists
+    data = re.sub(r"^{", "", data)
+    # remove trailing right brace if it exists
+    data = re.sub(r"}$", "", data)
+    # remove dectalk control codes 
+    data = re.sub(r"\[ ?:.*?\]", "", data)
+    return data
+
 # take action on a command sent from emacspeak
 # This is basically a big if/elif/else statement block
 def process_cmd(cmd, data):
@@ -63,13 +73,15 @@ def process_cmd(cmd, data):
         log("queueing " +  data)
         queue.appendleft(data)
     elif cmd == "tts_say":
-        client.speak(data)
+        client.speak(clean(data))
     elif cmd == "d":
         # this command speaks the currently queued text.
         while(len(queue) > 0):
             log("q length: " + str(len(queue)))
             i = queue.pop()
             log("i: " +  i)
+            i = clean(i)
+            log("ic: " +  i)
             client.set_priority(speechd.Priority.MESSAGE)
             client.speak(i)
     elif cmd == "s":
@@ -81,10 +93,10 @@ def process_cmd(cmd, data):
         set_punctuation(data)
     elif cmd == "l":
         log( "letter " + data)
-        client.char(data)
+        client.char(clean(data))
     elif cmd == "tts_sync_state":
         punct, capitalize, allcaps, splitcaps, rate = re.split("\s+", data)
-        tts_sync_state(punct, capitalize, allcaps, splitcaps, rate)
+        #tts_sync_state(punct, capitalize, allcaps, splitcaps, rate)
         # x is for exit.  Not used by emacspeak, helpful for testing.
     elif cmd == "x":
         client.close()
@@ -108,10 +120,10 @@ queue = deque([])               # queue of things to speak
 read_partial_cmd = 0            # flag to indicate if we have only read a partial command so far
 input = [sys.stdin] 
 while 1:
-    log("select")
-    inputready,outputready,exceptready = select.select(input,[],[]) 
-    print "inputready: ", inputready
-    if sys.stdin in inputready:
+        log("select")
+    #inputready,outputready,exceptready = select.select(input,[],[]) 
+    #print "inputready: ", inputready
+    #if sys.stdin in inputready:
         line = sys.stdin.readline().rstrip()
         log("original: " + line)
         log("partial " + str(read_partial_cmd))
@@ -142,17 +154,11 @@ while 1:
                     read_partial_cmd = 1
                     continue
 
-            # remove leading left brace if it exists
-            data = re.sub(r"^{", "", data)
-            # remove trailing right brace if it exists
-            data = re.sub(r"}$", "", data)
-            # remove dectalk control codes 
-            data = re.sub(r"\[ ?:.*?\]", "", data)
             log( "cmd: " + cmd + " data now '" + data + "'")
             process_cmd(cmd, data)
     # If we fell through because of a timeout
-    else:
-        print "timeout"
+    #else:
+        #print "timeout"
 
 
 # close our connection to speech dispatcher although theoretically
