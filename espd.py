@@ -5,6 +5,7 @@ import speechd
 from collections import deque
 import re
 import select 
+#import fcntl
 
 # functions
 
@@ -95,7 +96,8 @@ def process_cmd(cmd, data):
         log( "letter " + data)
         client.char(clean(data))
     elif cmd == "tts_sync_state":
-        punct, capitalize, allcaps, splitcaps, rate = re.split("\s+", data)
+        log("tts_sync disabled")
+        #punct, capitalize, allcaps, splitcaps, rate = re.split("\s+", data)
         #tts_sync_state(punct, capitalize, allcaps, splitcaps, rate)
         # x is for exit.  Not used by emacspeak, helpful for testing.
     elif cmd == "x":
@@ -118,13 +120,20 @@ queue = deque([])               # queue of things to speak
 
 # Main loop
 read_partial_cmd = 0            # flag to indicate if we have only read a partial command so far
+
+#flags = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+#fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
 input = [sys.stdin] 
 while 1:
-        log("select")
-    #inputready,outputready,exceptready = select.select(input,[],[]) 
+
+    log("select")
+    [inputready,outputready,exceptready] = select.select(input,[],[]) 
     #print "inputready: ", inputready
-    #if sys.stdin in inputready:
-        line = sys.stdin.readline().rstrip()
+    if sys.stdin in inputready:
+        #line = sys.stdin.readline().rstrip()
+        line = sys.stdin.readline()
+        #line = sys.stdin .read(2048)
         log("original: " + line)
         log("partial " + str(read_partial_cmd))
         # if we already have a partial command then append the data
@@ -157,9 +166,11 @@ while 1:
             log( "cmd: " + cmd + " data now '" + data + "'")
             process_cmd(cmd, data)
     # If we fell through because of a timeout
-    #else:
+    else:
+        log("timeout")
         #print "timeout"
 
 
 # close our connection to speech dispatcher although theoretically
 client.close()
+
