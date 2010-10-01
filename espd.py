@@ -6,14 +6,16 @@ from collections import deque
 import re
 import select 
 
-
-
 # functions
+
+# Write a line to a fixed log file and close the file after writing
+# not very efficient but helpful for my debugging
 def log(data):
     log_file = open("/tmp/espd.log", "a")
     log_file.write(data + "\n")
     log_file.close()
 
+# Takes the speech rate as a string and converts to int and sets the rate 
 def set_rate(rate):
     log( "setting rate to " + rate)
     r = int(rate)
@@ -51,7 +53,8 @@ def         tts_sync_state(punct, capitalize, allcaps, splitcaps, rate):
     tts_capitalize(capitalize)
     set_rate(rate)
 
-
+# take action on a command sent from emacspeak
+# This is basically a big if/elif/else statement block
 def process_cmd(cmd, data):
     log("process_cmd")
     # This long if elif else block should probably be replaced by
@@ -64,8 +67,8 @@ def process_cmd(cmd, data):
     elif cmd == "d":
         # this command speaks the currently queued text.
         while(len(queue) > 0):
-            i = queue.pop()
             log("q length: " + str(len(queue)))
+            i = queue.pop()
             log("i: " +  i)
             client.set_priority(speechd.Priority.MESSAGE)
             client.speak(i)
@@ -91,9 +94,6 @@ def process_cmd(cmd, data):
         log("Unimplemented: " + line)
 
 # Main
-
-
-
 client = speechd.SSIPClient('espd')
 #     client.set_output_module('festival')
 client.set_language('en')
@@ -102,7 +102,7 @@ client.set_priority(speechd.Priority.MESSAGE)
 client.speak("Emacspeak Speech Dispatcher!")
 
 
-queue = deque([])
+queue = deque([])               # queue of things to speak
 
 # Main loop
 read_partial_cmd = 0            # flag to indicate if we have only read a partial command so far
@@ -138,7 +138,7 @@ while 1:
             # brace we still have more to read.
             if cmd == 'q':
                 if not re.match(r"^{.*}$", data):
-                    log("Unfinished command detected")
+                    log("partial data detected")
                     read_partial_cmd = 1
                     continue
 
